@@ -1,0 +1,53 @@
+# ==========================================
+# 1. NODE IDENTITY
+# ==========================================
+[identity]
+hostname = "nodefront01svc"
+ip = "10.0.0.101"
+datacenter_id = "kr-seoul-01"
+description = "Main Customer-Web Frontend Node"
+
+# ==========================================
+# 4. TAGS (Additional Capabilities)
+# ==========================================
+[tags]
+tags = [
+    "region:seoul",
+    "hardware:ssd",
+    "legacy_group:nodefrontsvc"
+]
+
+# ==========================================
+# 2. OWNERSHIP (Primary/Secondary Admin)
+# ==========================================
+[ownership]
+admin_primary = "Kim Star"
+admin_secondary = "Lee Cloud"
+team = "platform-ops"
+
+# ==========================================
+# 2. CATEGORIZATION (Primary Selectors)
+# ==========================================
+[category]
+role = "frontend"
+service_type = "customer-web"
+env = "prod"
+
+# ==========================================
+# 5. HARDWARE SPECS
+# ==========================================
+[hardware]
+cpu_cores = 8
+ram_gb = 16
+hardware_serial = "SN-A100-XYZ"
+bmc_address = ""
+
+# ==========================================
+# 6. ADMINISTRATION (Optional: Manual Override)
+# ==========================================
+[admin]
+
+# NOTE: This is a static receipt. No background reconciliation or drift check.
+# "enabled"  -> Binary will target this node if selectors/filters match.
+# "disabled" -> Binary will skip this node entirely during execution.
+state = "enabled"

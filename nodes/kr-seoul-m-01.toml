@@ -1,0 +1,54 @@
+# ==========================================
+# 1. NODE IDENTITY (Top-Level Metadata)
+# ==========================================
+[identity]
+hostname = "kr-seoul-m-01"
+ip = "10.0.0.10"
+datacenter_id = "kr-seoul-01"
+description = "Primary Control Plane Master Node"
+
+# ==========================================
+# 4. CAPABILITIES (Matches [filter.tag])
+# ==========================================
+[tags]
+tags = [
+    "region:seoul",
+    "hardware:ssd",
+    "system:etcd",
+    "taint:no-schedule"
+]
+
+# ==========================================
+# 2. OWNERSHIP (Primary/Secondary Admin)
+# ==========================================
+[ownership]
+admin_primary = "Kim Star" 
+admin_secondary = "Lee Cloud"
+team = "platform-ops"
+
+# ==========================================
+# 2. CATEGORY (Matches [selector.category])
+# ==========================================
+[category]
+role = "master"
+service_type = "control-plane"
+env = "prod"
+
+# ==========================================
+# 5. HARDWARE (Physical Specs)
+# ==========================================
+[hardware]
+cpu_cores = 16
+ram_gb = 32
+serial = "SN-M200-ABC"
+bmc_address = "10.0.1.10"
+
+# ==========================================
+# 6. ADMINISTRATION (Optional: Manual Override)
+# ==========================================
+[admin]
+
+# NOTE: This is a static receipt. No background reconciliation or drift check.
+# "enabled"  -> Binary will target this node if selectors/filters match.
+# "disabled" -> Binary will skip this node entirely during execution.
+state = "enabled"

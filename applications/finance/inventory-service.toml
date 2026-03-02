@@ -1,0 +1,52 @@
+
+# THIS IS SAMPLE
+
+# ==========================================
+# 1. APPLICATION IDENTITY
+# ==========================================
+[app]
+id = "inventory-svc-01"
+name = "Inventory Service"
+owner_team = "finance-eng"
+
+# ==========================================
+# 2. TARGETING (The Selector Logic)
+# ==========================================
+[selector.category]
+# Matches the Node's "Categorization" block (Strict Enums)
+role = "frontend"
+service_type = "customer-web"
+env = "prod"
+
+[filter.tag]
+# Evaluates the Node's "Tags" array (Dynamic Strings)
+require = ["hardware:ssd"]
+exclude = ["network:restricted"]
+
+# ==========================================
+# 3. BINARY & SERVICE
+# ==========================================
+[artifact]
+version = "v2.5.1"
+url = "https://internal.artifactory/bins/inv-svc-v2.5.1.tar.gz"
+checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+[service]
+binary_path = "/usr/local/bin/inventory-service"
+working_dir = "/opt/inventory-service"
+user = "inventory-user"
+memory_limit = "2G"
+cpu_limit = "50%"
+
+# ==========================================
+# 4. NETWORKING & ENVIRONMENT
+# ==========================================
+[network]
+listen_port = 8080
+listen_address = "0.0.0.0"
+
+[env]
+APP_PORT = "8080"
+DB_URL = "postgres://db.internal:5432/main"
+LOG_LEVEL = "info"
+STAGING_KEY = ""
