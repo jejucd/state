@@ -32,8 +32,13 @@ url = "https://internal.artifactory/bins/inv-svc-v2.5.1.tar.gz"
 checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 [service]
-binary_path = "/usr/local/bin/inventory-service"
+# The static symlink that never changes. 
+# Systemd or your process manager always points here.
+binary_path = "/opt/inventory-service/current/inventory-service"
+
+# The base directory for logs, configs, and release folders.
 working_dir = "/opt/inventory-service"
+
 user = "inventory-user"
 memory_limit = "2G"
 cpu_limit = "50%"
