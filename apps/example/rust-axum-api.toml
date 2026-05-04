@@ -1,0 +1,83 @@
+# Desired state for a Rust Axum API.
+
+[app]
+id = "rust-axum-api"
+name = "Rust Axum API"
+team = "example-eng"
+kind = "rust-service"
+environment = "prod"
+
+[artifact]
+type = "binary"
+version = "v1.0.0"
+url = "https://artifacts.example.internal/rust-axum-api/rust-axum-api-v1.0.0-linux-x86_64.tar.gz"
+checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+[target]
+environment = "prod"
+node_names = ["nodefront01svc"]
+roles = ["api"]
+require_tags = ["region:seoul", "hardware:ssd", "nginx:available", "systemd:available", "runtime:native"]
+exclude_tags = ["network:restricted"]
+
+[layout]
+base_dir = "/srv/jejucd/apps/rust-axum-api"
+releases_dir = "/srv/jejucd/apps/rust-axum-api/releases"
+current_link = "/srv/jejucd/apps/rust-axum-api/current"
+shared_dir = "/srv/jejucd/apps/rust-axum-api/shared"
+log_dir = "/var/log/jejucd/rust-axum-api"
+
+[runtime]
+type = "native"
+user = "rust-axum-api"
+
+[service]
+type = "systemd"
+name = "jejucd-rust-axum-api"
+exec = "/srv/jejucd/apps/rust-axum-api/current/rust-axum-api"
+working_dir = "/srv/jejucd/apps/rust-axum-api/current"
+env_file = "/etc/jejucd/env/rust-axum-api.env"
+restart = "always"
+
+[service.resources]
+memory_max = "512M"
+cpu_quota = "50%"
+
+[service.hardening]
+no_new_privileges = true
+private_tmp = true
+protect_system = "strict"
+protect_home = true
+
+[http]
+enabled = true
+mode = "reverse_proxy"
+domains = ["api.example.com"]
+path = "/"
+listen_port = 80
+
+[http.reverse_proxy]
+upstream_address = "127.0.0.1"
+upstream_port = 8081
+preserve_host = true
+
+[health]
+type = "http"
+url = "http://127.0.0.1:8081/health"
+expected_status = 200
+timeout_seconds = 5
+interval_seconds = 10
+
+[deployment]
+strategy = "all-at-once"
+rollback = "manual"
+retain_releases = 5
+
+[observability]
+deployment_events = true
+service_name = "rust-axum-api"
+
+[env]
+APP_PORT = "8081"
+DATABASE_URL = "secret://example/rust-axum-api/DATABASE_URL"
+RUST_LOG = "info"

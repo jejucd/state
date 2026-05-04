@@ -1,54 +1,44 @@
-# ==========================================
-# 1. NODE IDENTITY (Top-Level Metadata)
-# ==========================================
-[identity]
-hostname = "kr-seoul-m-01"
-ip = "10.0.0.10"
-datacenter_id = "kr-seoul-01"
-description = "Primary Control Plane Master Node"
+# Desired state for the primary JejuCD control-plane node.
 
-# ==========================================
-# 4. CAPABILITIES (Matches [filter.tag])
-# ==========================================
+[node]
+name = "kr-seoul-m-01"
+hostname = "kr-seoul-m-01"
+address = "10.0.0.10"
+datacenter = "kr-seoul-01"
+environment = "prod"
+status = "active"
+description = "Primary JejuCD manager node"
+
+[scheduling]
+enabled = false
+reason = "control-plane node"
+
+[ownership]
+team = "platform-ops"
+admin_primary = "Kim Star"
+admin_secondary = "Lee Cloud"
+
+[placement]
+roles = ["control-plane"]
+service_types = ["manager"]
+labels = ["region:seoul", "zone:core"]
+
 [tags]
-tags = [
-    "region:seoul",
-    "hardware:ssd",
-    "system:etcd",
-    "taint:no-schedule"
+values = [
+  "region:seoul",
+  "hardware:ssd",
+  "system:jejucd-manager",
+  "system:postgres-client",
+  "taint:no-apps"
 ]
 
-# ==========================================
-# 2. OWNERSHIP (Primary/Secondary Admin)
-# ==========================================
-[ownership]
-admin_primary = "Kim Star" 
-admin_secondary = "Lee Cloud"
-team = "platform-ops"
+[capacity]
+port_start = 0
+port_end = 0
+max_apps = 0
 
-# ==========================================
-# 2. CATEGORY (Matches [selector.category])
-# ==========================================
-[category]
-role = "master"
-service_type = "control-plane"
-env = "prod"
-
-# ==========================================
-# 5. HARDWARE (Physical Specs)
-# ==========================================
 [hardware]
 cpu_cores = 16
 ram_gb = 32
 serial = "SN-M200-ABC"
 bmc_address = "10.0.1.10"
-
-# ==========================================
-# 6. ADMINISTRATION (Optional: Manual Override)
-# ==========================================
-[admin]
-
-# NOTE: This is a static receipt. No background reconciliation or drift check.
-# "enabled"  -> Binary will target this node if selectors/filters match.
-# "disabled" -> Binary will skip this node entirely during execution.
-state = "enabled"

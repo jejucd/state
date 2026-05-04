@@ -1,0 +1,67 @@
+# Desired state for a React static site.
+
+[app]
+id = "react-admin"
+name = "React Admin"
+team = "example-eng"
+kind = "static-site"
+environment = "prod"
+
+[artifact]
+type = "static_bundle"
+version = "v1.0.0"
+url = "https://artifacts.example.internal/react-admin/react-admin-v1.0.0-dist.tar.gz"
+checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+[target]
+environment = "prod"
+node_names = ["nodefront01svc"]
+roles = ["web", "static"]
+require_tags = ["region:seoul", "hardware:ssd", "nginx:available", "runtime:static"]
+exclude_tags = ["network:restricted"]
+
+[layout]
+base_dir = "/srv/jejucd/apps/react-admin"
+releases_dir = "/srv/jejucd/apps/react-admin/releases"
+current_link = "/srv/jejucd/apps/react-admin/current"
+shared_dir = "/srv/jejucd/apps/react-admin/shared"
+log_dir = "/var/log/jejucd/react-admin"
+
+[runtime]
+type = "none"
+user = "www-data"
+
+[service]
+type = "none"
+
+[http]
+enabled = true
+mode = "static"
+domains = ["admin.example.com"]
+path = "/"
+listen_port = 80
+
+[http.static]
+root = "/srv/jejucd/apps/react-admin/current"
+index = "index.html"
+spa_fallback = true
+
+[health]
+type = "http"
+url = "http://127.0.0.1/"
+host_header = "admin.example.com"
+expected_status = 200
+timeout_seconds = 5
+interval_seconds = 10
+
+[deployment]
+strategy = "all-at-once"
+rollback = "manual"
+retain_releases = 5
+
+[observability]
+deployment_events = true
+service_name = "react-admin"
+
+[env]
+PUBLIC_API_BASE_URL = "https://api.example.com"

@@ -1,81 +1,250 @@
-# jejucd GitOps Template Repository
+# JejuCD State Repository
 
-Welcome to the official GitOps template for **jejucd**. This repository acts as the single source of truth for infrastructure state and application deployments.
+This repository stores the desired state for JejuCD.
 
-Managing thousands of applications across 500+ nodes requires strict organization to prevent misconfigurations. This repository utilizes an **Atomic Directory Structure** combined with **Domain-Driven Design** to ensure a blast radius of zero. Every node, datacenter, and application is managed as an isolated code object.
-
----
-
-## 1. Repository Structure
-
-This repository is strictly partitioned into three main layers: Environments (Datacenters), Hardware (Nodes), and Business Domains (Apps).
+Git answers:
 
 ```text
-/gitops-repo
-│
-├── datacenters/            # The "Environment" Layer (Base Classes)
-│   └── dc-seoul.toml       # Global network/SSH for Seoul
-│
-├── nodes/                  # The "Hardware" Layer (500+ individual files)
-│   ├── nodefront01svc.toml # Master node 1
-│   └── nodeworker500.toml  # Worker node 500
-│
-└── apps/                   # The "Business Domain" Layer
-    ├── finance/
-    │   ├── inventory-service.toml
-    │   └── billing-api.toml
-    └── logistics/
-        └── tracking-system.toml
-
+what should exist
+which app version should run
+where it should run
+which runtime should be used
+which systemd service should exist
+which Nginx route should exist
+which health check defines success
 ```
 
-### Architectural Advantages
+Git does not store observed runtime state.
 
-- **Zero Blast Radius:** Editing `node-1.toml` cannot accidentally impact `node-2.toml`. A syntax error isolates the failure to a single node, rather than compromising the entire fleet.
-- **Extreme Searchability:** Infrastructure components can be queried natively using standard OS utilities (e.g., `ls nodes/ | grep front`).
-- **Precise Audit Logging:** Git commit history reflects exact, isolated changes (such as a specific node's IP or an application's artifact version) without necessitating reviews of monolithic, multi-thousand-line manifests.
+The JejuCD database stores:
 
----
+```text
+agent heartbeats
+current deployed versions reported by nodes
+deployment history
+deployment logs metadata
+locks
+audit events
+user accounts
+tokens
+```
 
-## 2. Targeting and Selector Logic
+## Repository Layout
 
-The **jejucd** binary calculates deployment targets using a strict "Double-Lock" intersection logic. This mechanism prevents targeting accidents by separating rigid Enums from flexible Tags.
+```text
+datacenters/
+  kr-seoul-01.toml
 
-The targeting logic is defined mathematically as:
+nodes/
+  kr-seoul-m-01.toml
+  nodefront01svc.toml
 
-$TargetNodes = (CategoryMatch \cap TagMatch) - ExcludeStatus$
+apps/
+  example/
+    php-shop.toml
+    react-admin.toml
+    rust-axum-api.toml
+    spring-boot-api.toml
+```
 
-### Categorization (Primary Selectors)
+## State Boundaries
 
-These are **First-Class Fields**. Every node must declare these values. Within the `jejucd` binary, these are validated as strict **Enums** to catch typographical errors during the CI/CD pipeline, prior to execution.
+This repository should contain only declarative desired state.
 
-| Field              | Type | Enum Examples                           | Description                              |
-| ------------------ | ---- | --------------------------------------- | ---------------------------------------- |
-| **`role`**         | Enum | `frontend`, `backend`, `db`, `worker`   | High-level infrastructure layer.         |
-| **`service_type`** | Enum | `customer-web`, `admin-portal`, `api`   | Specific functional "home" for the app.  |
-| **`env`**          | Enum | `prod`, `staging`, `dev`                | Lifecycle environment of the node.       |
-| **`status`**       | Enum | `active`, `maintenance`, `provisioning` | Operational state (used for exclusions). |
+Allowed here:
 
-### Tags (Capability Layer)
+```text
+datacenter identity
+node placement labels
+node scheduling state
+node capacity policy
+app identity
+artifact URL/checksum/version
+target selection rules
+runtime intent
+systemd service intent
+Nginx route intent
+health check intent
+rollback policy
+secret references
+```
 
-Tags are **Dynamic Strings** (`key:value` format) utilized for defining specific node capabilities that fall outside the primary schema.
+Not allowed here:
 
-| Key Prefix          | Example Values           | Description                                     |
-| ------------------- | ------------------------ | ----------------------------------------------- |
-| **`region:`**       | `seoul`, `tokyo`         | Physical geographic location.                   |
-| **`hardware:`**     | `ssd`, `gpu`, `high-mem` | Hardware requirements for specific binaries.    |
-| **`legacy_group:`** | `nodefrontsvc`           | Mapping reference to legacy naming conventions. |
+```text
+raw secrets
+node heartbeat timestamps
+live systemd status
+live Nginx status
+deployment logs
+current state discovered by agents
+artifact download cache state
+user sessions
+```
 
----
+## Datacenter State
 
-## 3. Standard Configurations
+Datacenter files describe stable placement and network context.
 
-Below are the approved structural templates for defining resources within this repository.
+Example:
 
-> **Note:** The `jejucd` parser expects empty strings (`""`) rather than `null` values for unpopulated fields.
+```toml
+[datacenter]
+id = "kr-seoul-01"
+name = "Seoul Central Hub"
+region = "ap-northeast-2"
+status = "active"
 
-### Datacenter Profile (`datacenters/dc-seoul.toml`)
+[network]
+gateway = "10.0.0.1"
+dns = ["8.8.8.8"]
+ntp = ["pool.ntp.org"]
+proxy_url = ""
+```
 
-### Node Profile (`nodes/nodefront01svc.toml`)
+Datacenter state is not an SSH control model. Agents join the manager and apply deployment plans locally.
 
-### Application Profile (`apps/finance/inventory-service.toml`)
+## Node State
+
+Node files describe where apps are allowed to land.
+
+Node state includes:
+
+```text
+name
+hostname
+environment
+datacenter
+scheduling state
+roles
+labels
+tags
+port range
+max app count
+```
+
+Live facts such as agent version, detected Java version, running services, and current ports in use belong in the database.
+
+## App State
+
+App files describe one deployable unit.
+
+Each app should define:
+
+```text
+app identity
+kind
+artifact
+target rules
+runtime
+service
+http route
+health check
+deployment strategy
+rollback behavior
+environment values
+```
+
+Supported app kinds should be explicit:
+
+```text
+spring-boot
+rust-service
+static-site
+php-app
+systemd-service
+```
+
+## Nginx State
+
+JejuCD state stores Nginx route intent, not raw global Nginx configuration.
+
+App state may say:
+
+```text
+domain = inventory.example.com
+mode = reverse_proxy
+upstream = 127.0.0.1:8080
+```
+
+The agent renders node-local config such as:
+
+```text
+/etc/nginx/jejucd-enabled/inventory-service.conf
+```
+
+JejuCD owns only its generated include directory. It does not own global `nginx.conf`, global TLS policy, WAF rules, or host-wide Nginx tuning.
+
+Before every Nginx reload, the agent must:
+
+```text
+render candidate config
+run nginx -t
+reload only if valid
+keep old config if invalid
+report failure
+```
+
+## Secrets
+
+Do not store raw secrets in Git.
+
+Use references:
+
+```toml
+[env]
+LOG_LEVEL = "info"
+DATABASE_URL = "secret://example/rust-axum-api/DATABASE_URL"
+```
+
+For MVP, `[env]` may contain normal non-secret values and secret references. It should not contain raw passwords, tokens, private keys, or database credentials.
+
+Secret backends may be JejuCD encrypted secrets, SOPS, Vault, or another configured provider. The Git state only names the secret reference.
+
+## Target Selection
+
+Apps target nodes by matching desired node state.
+
+The manager calculates:
+
+```text
+eligible nodes
+  = selected node names, if specified
+  + nodes with scheduling enabled
+  + matching environment
+  + matching roles
+  + required tags
+  - excluded tags
+```
+
+The manager should validate conflicts before creating a deployment plan:
+
+```text
+duplicate domain
+duplicate domain/path
+duplicate local port on the same node
+duplicate systemd service name
+duplicate PHP-FPM pool
+missing required runtime capability
+missing Nginx capability for HTTP apps
+invalid artifact checksum format
+```
+
+## Deployment Meaning
+
+Changing an app file changes desired deployment state.
+
+Example:
+
+```toml
+[artifact]
+version = "v2.5.2"
+```
+
+means:
+
+```text
+JejuCD should deploy version v2.5.2 to the app's eligible target nodes.
+```
+
+Deployment result, per-node progress, health check output, and rollback events are recorded outside Git as observed state.

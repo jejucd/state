@@ -1,22 +1,17 @@
-# THIS IS SAMPLE
+# Desired state for the Seoul datacenter.
 
-# ==========================================
-# DATACENTER INFRASTRUCTURE
-# ==========================================
+[datacenter]
 id = "kr-seoul-01"
 name = "Seoul Central Hub"
 description = "Equinix SL1 - Rack-A"
 region = "ap-northeast-2"
+status = "active"
 
 [network]
-dns_primary = "8.8.8.8"
-dns_secondary = ""        # Empty string instead of null
 gateway = "10.0.0.1"
-ntp_server = "pool.ntp.org"
-proxy_url = ""            # No proxy for this DC
+dns = ["8.8.8.8"]
+ntp = ["pool.ntp.org"]
+proxy_url = ""
 
-[access]
-# jejucd uses these to SSH into the nodes
-ssh_user = "jejucd-admin"
-ssh_port = 22
-ssh_key_path = "/etc/jejucd/keys/id_rsa"
+[placement]
+labels = ["region:seoul", "country:kr"]
