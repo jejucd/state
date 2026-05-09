@@ -1,0 +1,28 @@
+# rbac/global.toml
+# Fixed roles keep RBAC simple:
+# owner    = everything, including RBAC changes
+# admin    = manage apps and deployments
+# operator = deploy, rollback, and read logs
+# viewer   = read only
+
+[rbac]
+# If this file is missing, the first active user becomes owner.
+# Other choices: "allow_all" for local dev, "deny_all" for strict prod.
+missing_mode = "bootstrap_admin"
+default_role = "none"
+
+[owners]
+emails = ["you@example.com"]
+groups = []
+
+[admins]
+emails = []
+groups = []
+
+[operators]
+emails = []
+groups = []
+
+[viewers]
+emails = []
+groups = []

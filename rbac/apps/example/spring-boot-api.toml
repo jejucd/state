@@ -1,0 +1,14 @@
+# rbac/apps/example/spring-boot-api.toml
+# Grants here apply only to this app.
+
+[app]
+domain = "example.com"
+id = "spring-boot-api"
+
+[operators]
+emails = []
+groups = ["api-operators"]
+
+[viewers]
+emails = ["alice@example.com"]
+groups = []

@@ -1,5 +1,7 @@
 # JejuCD State Repository
 
+[한국어](README.ko.md)
+
 This repository stores the desired state for JejuCD.
 
 Git answers:
@@ -33,19 +35,47 @@ tokens
 
 ```text
 datacenters/
-  kr-seoul-01.toml
+  {datacenter}.toml
 
 nodes/
-  kr-seoul-m-01.toml
-  nodefront01svc.toml
+  {node}.toml
 
 apps/
-  example/
-    php-shop.toml
-    react-admin.toml
-    rust-axum-api.toml
-    spring-boot-api.toml
+  {domain}/
+    {app}.toml
+
+rbac/
+  global.toml
+  domains/
+    {domain}.toml
+  apps/
+    {domain}/
+      {app}.toml
 ```
+
+## State Files
+
+Datacenters:
+
+- [kr-seoul-01](datacenters/kr-seoul-01.toml)
+
+Nodes:
+
+- [kr-seoul-m-01](nodes/kr-seoul-m-01.toml)
+- [nodefront01svc](nodes/nodefront01svc.toml)
+
+Example apps:
+
+- [PHP Shop](apps/example/php-shop.toml)
+- [React Admin](apps/example/react-admin.toml)
+- [Rust Axum API](apps/example/rust-axum-api.toml)
+- [Spring Boot API](apps/example/spring-boot-api.toml)
+
+RBAC:
+
+- [Global RBAC](rbac/global.toml)
+- [example.com RBAC](rbac/domains/example.com.toml)
+- [Spring Boot API RBAC](rbac/apps/example/spring-boot-api.toml)
 
 ## State Boundaries
 
@@ -153,6 +183,41 @@ rust-service
 static-site
 php-app
 systemd-service
+```
+
+## Simple RBAC
+
+RBAC should stay boring. State files grant fixed JejuCD roles to emails and groups; they should not define custom permission strings.
+
+Built-in roles:
+
+```text
+owner    everything, including RBAC changes
+admin    manage apps and deployments
+operator deploy, rollback, and read logs
+viewer   read only
+```
+
+Access is merged from broad to narrow:
+
+```text
+rbac/global.toml
+rbac/domains/{domain}.toml
+rbac/apps/{domain}/{app}.toml
+```
+
+Missing domain or app RBAC files mean "inherit parent access". If a user matches more than one role, the highest role wins:
+
+```text
+owner > admin > operator > viewer
+```
+
+Use simple lists:
+
+```toml
+[operators]
+emails = ["alice@example.com"]
+groups = ["api-operators"]
 ```
 
 ## Nginx State
