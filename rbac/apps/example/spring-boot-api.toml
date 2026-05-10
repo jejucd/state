@@ -2,7 +2,7 @@
 # Grants here apply only to this app.
 
 [app]
-domain = "example.com"
+domain_key = "example"
 id = "spring-boot-api"
 
 [operators]

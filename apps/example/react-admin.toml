@@ -17,8 +17,9 @@ checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b
 environment = "prod"
 node_names = ["nodefront01svc"]
 roles = ["web", "static"]
-require_tags = ["region:seoul", "hardware:ssd", "nginx:available", "runtime:static"]
-exclude_tags = ["network:restricted"]
+require_labels = ["region:seoul", "hardware:ssd"]
+require_capabilities = ["nginx"]
+exclude_labels = ["network:restricted"]
 
 [layout]
 base_dir = "/srv/jejucd/apps/react-admin"
@@ -36,6 +37,7 @@ type = "none"
 
 [http]
 enabled = true
+provider = "nginx"
 mode = "static"
 domains = ["admin.example.com"]
 path = "/"

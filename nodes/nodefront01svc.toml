@@ -21,20 +21,11 @@ admin_secondary = "Lee Cloud"
 [placement]
 roles = ["web", "api", "static", "php"]
 service_types = ["customer-web", "example-api", "example-static", "example-php"]
-labels = ["region:seoul", "zone:frontend"]
+labels = ["region:seoul", "zone:frontend", "hardware:ssd"]
 
 [tags]
 values = [
-  "region:seoul",
-  "hardware:ssd",
-  "legacy_group:nodefrontsvc",
-  "nginx:available",
-  "systemd:available",
-  "runtime:native",
-  "runtime:java",
-  "runtime:static",
-  "runtime:php",
-  "php-fpm:available"
+  "legacy_group:nodefrontsvc"
 ]
 
 [capacity]

@@ -1,0 +1,17 @@
+# rbac/domains/example.toml
+# Grants here apply to every app in this business domain.
+
+[domain]
+domain_key = "example"
+
+[admins]
+emails = ["owner@example.com"]
+groups = []
+
+[operators]
+emails = []
+groups = ["example-operators"]
+
+[viewers]
+emails = []
+groups = ["example-viewers"]

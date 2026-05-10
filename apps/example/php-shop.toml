@@ -17,8 +17,9 @@ checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b
 environment = "prod"
 node_names = ["nodefront01svc"]
 roles = ["web"]
-require_tags = ["region:seoul", "hardware:ssd", "nginx:available", "runtime:php", "php-fpm:available"]
-exclude_tags = ["network:restricted"]
+require_labels = ["region:seoul", "hardware:ssd"]
+require_capabilities = ["runtime:php", "php-fpm"]
+exclude_labels = ["network:restricted"]
 
 [layout]
 base_dir = "/srv/jejucd/apps/php-shop"
@@ -47,6 +48,7 @@ listen_group = "www-data"
 
 [http]
 enabled = true
+provider = "nginx"
 mode = "php_fpm"
 domains = ["shop.example.com"]
 path = "/"

@@ -17,8 +17,9 @@ checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b
 environment = "prod"
 node_names = ["nodefront01svc"]
 roles = ["api"]
-require_tags = ["region:seoul", "hardware:ssd", "nginx:available", "systemd:available", "runtime:native"]
-exclude_tags = ["network:restricted"]
+require_labels = ["region:seoul", "hardware:ssd"]
+require_capabilities = ["systemd", "runtime:native"]
+exclude_labels = ["network:restricted"]
 
 [layout]
 base_dir = "/srv/jejucd/apps/rust-axum-api"
@@ -51,6 +52,7 @@ protect_home = true
 
 [http]
 enabled = true
+provider = "nginx"
 mode = "reverse_proxy"
 domains = ["api.example.com"]
 path = "/"

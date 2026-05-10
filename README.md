@@ -12,7 +12,7 @@ which app version should run
 where it should run
 which runtime should be used
 which systemd service should exist
-which Nginx route should exist
+which HTTP provider and route should exist
 which health check defines success
 ```
 
@@ -25,6 +25,7 @@ agent heartbeats
 current deployed versions reported by nodes
 deployment history
 deployment logs metadata
+observed node capabilities
 locks
 audit events
 user accounts
@@ -41,16 +42,30 @@ nodes/
   {node}.toml
 
 apps/
-  {domain}/
+  {domain_key}/
     {app}.toml
 
 rbac/
   global.toml
   domains/
-    {domain}.toml
+    {domain_key}.toml
   apps/
-    {domain}/
+    {domain_key}/
       {app}.toml
+```
+
+`domain_key` means a business or product domain, such as `payment`, `streaming`, or `example`. It is not a DNS hostname. DNS hostnames live under `[http].domains`.
+
+Example:
+
+```text
+apps/payment/api.toml
+rbac/domains/payment.toml
+```
+
+```toml
+[http]
+domains = ["api.payment.example.com"]
 ```
 
 ## State Files
@@ -74,7 +89,7 @@ Example apps:
 RBAC:
 
 - [Global RBAC](rbac/global.toml)
-- [example.com RBAC](rbac/domains/example.com.toml)
+- [example domain RBAC](rbac/domains/example.toml)
 - [Spring Boot API RBAC](rbac/apps/example/spring-boot-api.toml)
 
 ## State Boundaries
@@ -93,7 +108,7 @@ artifact URL/checksum/version
 target selection rules
 runtime intent
 systemd service intent
-Nginx route intent
+HTTP provider and route intent
 health check intent
 rollback policy
 secret references
@@ -106,6 +121,7 @@ raw secrets
 node heartbeat timestamps
 live systemd status
 live Nginx status
+installed Nginx/systemd/Java/PHP-FPM status
 deployment logs
 current state discovered by agents
 artifact download cache state
@@ -148,12 +164,12 @@ datacenter
 scheduling state
 roles
 labels
-tags
+legacy/grouping tags
 port range
 max app count
 ```
 
-Live facts such as agent version, detected Java version, running services, and current ports in use belong in the database.
+Live facts such as agent version, detected Java version, installed Nginx/systemd/PHP-FPM, running services, and current ports in use belong in the database.
 
 ## App State
 
@@ -174,6 +190,18 @@ deployment strategy
 rollback behavior
 environment values
 ```
+
+Target rules should separate Git-owned placement intent from observed node facts:
+
+```toml
+[target]
+environment = "prod"
+roles = ["api"]
+require_labels = ["region:seoul", "hardware:ssd"]
+require_capabilities = ["systemd", "runtime:java"]
+```
+
+`roles` and labels are desired placement state from Git. `require_capabilities` are matched against capabilities reported by agents into the database.
 
 Supported app kinds should be explicit:
 
@@ -202,11 +230,11 @@ Access is merged from broad to narrow:
 
 ```text
 rbac/global.toml
-rbac/domains/{domain}.toml
-rbac/apps/{domain}/{app}.toml
+rbac/domains/{domain_key}.toml
+rbac/apps/{domain_key}/{app}.toml
 ```
 
-Missing domain or app RBAC files mean "inherit parent access". If a user matches more than one role, the highest role wins:
+Missing `domain_key` or app RBAC files mean "inherit parent access". If a user matches more than one role, the highest role wins:
 
 ```text
 owner > admin > operator > viewer
@@ -220,25 +248,37 @@ emails = ["alice@example.com"]
 groups = ["api-operators"]
 ```
 
-## Nginx State
+## HTTP Provider State
 
-JejuCD state stores Nginx route intent, not raw global Nginx configuration.
+JejuCD state stores HTTP provider and route intent, not raw global Nginx configuration.
+
+`domain_key` is the business/product domain. `[http].domains` are DNS hostnames, such as `api.payment.example.com`. They are separate from `domain_key`, which is used for repository layout and RBAC ownership.
 
 App state may say:
 
-```text
-domain = inventory.example.com
-mode = reverse_proxy
-upstream = 127.0.0.1:8080
+```toml
+[http]
+enabled = true
+provider = "nginx"
+mode = "reverse_proxy"
+domains = ["inventory.example.com"]
+path = "/"
+listen_port = 80
+
+[http.reverse_proxy]
+upstream_address = "127.0.0.1"
+upstream_port = 8080
 ```
 
-The agent renders node-local config such as:
+When `provider = "nginx"`, the agent renders node-local config such as:
 
 ```text
 /etc/nginx/jejucd-enabled/inventory-service.conf
 ```
 
 JejuCD owns only its generated include directory. It does not own global `nginx.conf`, global TLS policy, WAF rules, or host-wide Nginx tuning.
+
+When `provider = "external"`, JejuCD deploys the app but does not render or reload Nginx for that route.
 
 Before every Nginx reload, the agent must:
 
@@ -278,20 +318,21 @@ eligible nodes
   + nodes with scheduling enabled
   + matching environment
   + matching roles
-  + required tags
-  - excluded tags
+  + required labels
+  - excluded labels
+  + required observed capabilities from the database
 ```
 
 The manager should validate conflicts before creating a deployment plan:
 
 ```text
-duplicate domain
-duplicate domain/path
+duplicate HTTP hostname
+duplicate HTTP hostname/path
 duplicate local port on the same node
 duplicate systemd service name
 duplicate PHP-FPM pool
-missing required runtime capability
-missing Nginx capability for HTTP apps
+missing required observed capability
+missing Nginx capability when http.provider = "nginx"
 invalid artifact checksum format
 ```
 
