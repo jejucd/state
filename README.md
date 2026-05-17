@@ -22,11 +22,10 @@ The JejuCD database stores:
 
 ```text
 agent heartbeats
-current deployed versions reported by nodes
 deployment history
+per-node deployment target results
 deployment logs metadata
 observed node capabilities
-locks
 audit events
 user accounts
 tokens
@@ -164,12 +163,14 @@ datacenter
 scheduling state
 roles
 labels
-legacy/grouping tags
+legacy_tags values
 port range
 max app count
 ```
 
 Live facts such as agent version, detected Java version, installed Nginx/systemd/PHP-FPM, running services, and current ports in use belong in the database.
+
+Use `[placement].labels` for scheduling decisions. Use `[legacy_tags].values` only for migration notes, old grouping names, or human context; target matching should not depend on legacy tags.
 
 ## App State
 
@@ -196,12 +197,13 @@ Target rules should separate Git-owned placement intent from observed node facts
 ```toml
 [target]
 environment = "prod"
+node_names = ["nodefront01svc"]
 roles = ["api"]
 require_labels = ["region:seoul", "hardware:ssd"]
 require_capabilities = ["systemd", "runtime:java"]
 ```
 
-`roles` and labels are desired placement state from Git. `require_capabilities` are matched against capabilities reported by agents into the database.
+`node_names`, `roles`, and labels are desired placement state from Git. `node_names`, when present, is a hard allow-list. The manager still applies environment, role, label, excluded label, and capability filters to those named nodes. `require_capabilities` are matched against capabilities reported by agents into the database.
 
 Supported app kinds should be explicit:
 
@@ -314,9 +316,9 @@ The manager calculates:
 
 ```text
 eligible nodes
-  = selected node names, if specified
-  + nodes with scheduling enabled
+  = selected node names, if specified, otherwise all nodes
   + matching environment
+  + scheduling enabled
   + matching roles
   + required labels
   - excluded labels

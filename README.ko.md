@@ -22,11 +22,10 @@ JejuCD 데이터베이스는 다음을 저장합니다.
 
 ```text
 agent heartbeat
-노드가 보고한 현재 배포 버전
 배포 이력
+노드별 배포 target 결과
 배포 로그 메타데이터
 관측된 node capability
-lock
 audit event
 user account
 token
@@ -164,12 +163,14 @@ datacenter
 scheduling state
 roles
 labels
-legacy/grouping tags
+legacy_tags values
 port range
 max app count
 ```
 
 Agent version, 감지된 Java version, 설치된 Nginx/systemd/PHP-FPM, 실행 중인 service, 현재 사용 중인 port 같은 live fact는 데이터베이스에 저장합니다.
+
+스케줄링 판단에는 `[placement].labels`를 사용합니다. `[legacy_tags].values`는 migration note, 과거 grouping 이름, 사람이 읽기 위한 context에만 사용하고 target matching에는 사용하지 않습니다.
 
 ## App 상태
 
@@ -196,12 +197,13 @@ Target rule은 Git이 소유하는 placement intent와 agent가 관측한 node f
 ```toml
 [target]
 environment = "prod"
+node_names = ["nodefront01svc"]
 roles = ["api"]
 require_labels = ["region:seoul", "hardware:ssd"]
 require_capabilities = ["systemd", "runtime:java"]
 ```
 
-`roles`와 label은 Git에 저장하는 desired placement state입니다. `require_capabilities`는 agent가 데이터베이스에 보고한 capability와 매칭합니다.
+`node_names`, `roles`, label은 Git에 저장하는 desired placement state입니다. `node_names`가 있으면 hard allow-list입니다. Manager는 지정된 node에도 environment, role, label, excluded label, capability filter를 계속 적용합니다. `require_capabilities`는 agent가 데이터베이스에 보고한 capability와 매칭합니다.
 
 지원하는 app kind는 명시적이어야 합니다.
 
@@ -314,9 +316,9 @@ Manager는 다음처럼 계산합니다.
 
 ```text
 eligible nodes
-  = selected node names, if specified
-  + nodes with scheduling enabled
+  = selected node names, if specified, otherwise all nodes
   + matching environment
+  + scheduling enabled
   + matching roles
   + required labels
   - excluded labels

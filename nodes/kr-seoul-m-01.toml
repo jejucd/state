@@ -23,7 +23,7 @@ roles = ["control-plane"]
 service_types = ["manager"]
 labels = ["region:seoul", "zone:core"]
 
-[tags]
+[legacy_tags]
 values = [
   "region:seoul",
   "hardware:ssd",

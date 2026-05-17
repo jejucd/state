@@ -23,7 +23,7 @@ roles = ["web", "api", "static", "php"]
 service_types = ["customer-web", "example-api", "example-static", "example-php"]
 labels = ["region:seoul", "zone:frontend", "hardware:ssd"]
 
-[tags]
+[legacy_tags]
 values = [
   "legacy_group:nodefrontsvc"
 ]
