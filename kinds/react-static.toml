@@ -1,0 +1,9 @@
+# Built-in deployment kind for React/static web bundles.
+
+[kind]
+name = "react-static"
+runner = "release-symlink-static-nginx"
+description = "Deploy a prebuilt static bundle with release directories and Nginx reload."
+
+[defaults]
+retain = 5

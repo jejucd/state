@@ -8,12 +8,9 @@ Git answers:
 
 ```text
 what should exist
-which app version should run
 where it should run
-which runtime should be used
-which systemd service should exist
-which HTTP provider and route should exist
-which health check defines success
+which built-in deployment kind should be used
+which simple release paths should be used
 ```
 
 Git does not store observed runtime state.
@@ -39,6 +36,9 @@ datacenters/
 
 nodes/
   {node}.toml
+
+kinds/
+  {kind}.toml
 
 apps/
   {domain_key}/
@@ -99,19 +99,16 @@ Allowed here:
 
 ```text
 datacenter identity
-node placement labels
 node scheduling state
-node capacity policy
+node labels
 app identity
-artifact URL/checksum/version
-target selection rules
-runtime intent
-systemd service intent
-HTTP provider and route intent
-health check intent
-rollback policy
-secret references
+app kind
+target node names or label selectors
+release directory paths
+small deployment defaults
 ```
+
+CI or the manager API should provide artifact URL/checksum/version for each deployment request.
 
 Not allowed here:
 
@@ -157,20 +154,14 @@ Node state includes:
 
 ```text
 name
-hostname
-environment
-datacenter
+hostname/address
 scheduling state
-roles
 labels
-legacy_tags values
-port range
-max app count
 ```
 
 Live facts such as agent version, detected Java version, installed Nginx/systemd/PHP-FPM, running services, and current ports in use belong in the database.
 
-Use `[placement].labels` for scheduling decisions. Use `[legacy_tags].values` only for migration notes, old grouping names, or human context; target matching should not depend on legacy tags.
+Use root `[labels]` for scheduling decisions. Labels are exact key/value matches, similar to a very small Kubernetes selector model.
 
 ## App State
 
@@ -181,38 +172,32 @@ Each app should define:
 ```text
 app identity
 kind
-artifact
 target rules
-runtime
-service
-http route
-health check
-deployment strategy
-rollback behavior
-environment values
+release directory paths
 ```
 
 Target rules should separate Git-owned placement intent from observed node facts:
 
 ```toml
 [target]
-environment = "prod"
-node_names = ["nodefront01svc"]
-roles = ["api"]
-require_labels = ["region:seoul", "hardware:ssd"]
-require_capabilities = ["systemd", "runtime:java"]
+nodes = []
+
+[target.labels]
+env = "prod"
+region = "kr-seoul"
+"role.api" = "true"
+"runtime.java" = "true"
 ```
 
-`node_names`, `roles`, and labels are desired placement state from Git. `node_names`, when present, is a hard allow-list. The manager still applies environment, role, label, excluded label, and capability filters to those named nodes. `require_capabilities` are matched against capabilities reported by agents into the database.
+`target.nodes` is an exact node allow-list. If it is empty, the manager selects nodes where every `target.labels` key/value matches the node's `[labels]` table.
 
 Supported app kinds should be explicit:
 
 ```text
-spring-boot
+php-fpm
+react-static
 rust-service
-static-site
-php-app
-systemd-service
+spring-boot
 ```
 
 ## Simple RBAC

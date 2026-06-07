@@ -1,0 +1,9 @@
+# Built-in deployment kind for Spring Boot systemd services.
+
+[kind]
+name = "spring-boot"
+runner = "release-symlink-systemd"
+description = "Deploy a Spring Boot artifact and restart a managed systemd unit."
+
+[defaults]
+retain = 5

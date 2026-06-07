@@ -4,8 +4,6 @@
 name = "nodefront01svc"
 hostname = "nodefront01svc"
 address = "10.0.0.101"
-datacenter = "kr-seoul-01"
-environment = "prod"
 status = "active"
 description = "Customer web and API application node"
 
@@ -13,28 +11,17 @@ description = "Customer web and API application node"
 enabled = true
 reason = ""
 
-[ownership]
-team = "platform-ops"
-admin_primary = "Kim Star"
-admin_secondary = "Lee Cloud"
-
-[placement]
-roles = ["web", "api", "static", "php"]
-service_types = ["customer-web", "example-api", "example-static", "example-php"]
-labels = ["region:seoul", "zone:frontend", "hardware:ssd"]
-
-[legacy_tags]
-values = [
-  "legacy_group:nodefrontsvc"
-]
-
-[capacity]
-port_start = 8000
-port_end = 8999
-max_apps = 20
-
-[hardware]
-cpu_cores = 8
-ram_gb = 16
-serial = "SN-A100-XYZ"
-bmc_address = ""
+[labels]
+env = "prod"
+region = "kr-seoul"
+zone = "frontend"
+disk = "ssd"
+"role.web" = "true"
+"role.api" = "true"
+"role.static" = "true"
+"runtime.php" = "true"
+"runtime.react" = "true"
+"runtime.java" = "true"
+"runtime.native" = "true"
+"proxy.nginx" = "true"
+"systemd" = "true"

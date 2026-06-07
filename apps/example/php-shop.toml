@@ -1,82 +1,22 @@
-# Desired state for a PHP-FPM application.
+# Minimal desired state for a PHP-FPM application.
+# CI supplies artifact URL/version/checksum when it creates a deployment.
 
 [app]
 id = "php-shop"
 name = "PHP Shop"
-team = "example-eng"
-kind = "php-app"
+kind = "php-fpm"
 environment = "prod"
-
-[artifact]
-type = "php_source_bundle"
-version = "v1.0.0"
-url = "https://artifacts.example.internal/php-shop/php-shop-v1.0.0.tar.gz"
-checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 [target]
-environment = "prod"
-node_names = ["nodefront01svc"]
-roles = ["web"]
-require_labels = ["region:seoul", "hardware:ssd"]
-require_capabilities = ["runtime:php", "php-fpm"]
-exclude_labels = ["network:restricted"]
+nodes = []
 
-[layout]
-base_dir = "/srv/jejucd/apps/php-shop"
-releases_dir = "/srv/jejucd/apps/php-shop/releases"
-current_link = "/srv/jejucd/apps/php-shop/current"
-shared_dir = "/srv/jejucd/apps/php-shop/shared"
-log_dir = "/var/log/jejucd/php-shop"
+[target.labels]
+env = "prod"
+region = "kr-seoul"
+"role.web" = "true"
+"runtime.php" = "true"
 
-[runtime]
-type = "php-fpm"
-version = "8.2"
-user = "php-shop"
-
-[service]
-type = "php-fpm"
-pool = "jejucd-php-shop"
-env_file = "/etc/jejucd/env/php-shop.env"
-reload = "php-fpm"
-
-[service.php_fpm]
-socket = "/run/php/jejucd-php-shop.sock"
-user = "php-shop"
-group = "php-shop"
-listen_owner = "www-data"
-listen_group = "www-data"
-
-[http]
-enabled = true
-provider = "nginx"
-mode = "php_fpm"
-domains = ["shop.example.com"]
-path = "/"
-listen_port = 80
-
-[http.php_fpm]
-socket = "/run/php/jejucd-php-shop.sock"
-public_root = "/srv/jejucd/apps/php-shop/current/public"
-index = "index.php"
-
-[health]
-type = "http"
-url = "http://127.0.0.1/health"
-host_header = "shop.example.com"
-expected_status = 200
-timeout_seconds = 5
-interval_seconds = 10
-
-[deployment]
-strategy = "all-at-once"
-rollback = "manual"
-retain_releases = 5
-
-[observability]
-deployment_events = true
-service_name = "php-shop"
-
-[env]
-APP_ENV = "prod"
-APP_KEY = "secret://example/php-shop/APP_KEY"
-DATABASE_URL = "secret://example/php-shop/DATABASE_URL"
+[deploy]
+artifact_dir = "/srv/jejucd/apps/php-shop/current"
+release_dir = "/srv/jejucd/apps/php-shop/releases"
+retain = 5

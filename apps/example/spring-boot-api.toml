@@ -1,88 +1,22 @@
-# Desired state for a Spring Boot API.
+# Minimal desired state for a Spring Boot API.
+# CI supplies artifact URL/version/checksum when it creates a deployment.
 
 [app]
 id = "spring-boot-api"
 name = "Spring Boot API"
-team = "example-eng"
 kind = "spring-boot"
 environment = "prod"
 
-[artifact]
-type = "jar"
-version = "v1.0.0"
-url = "https://artifacts.example.internal/spring-boot-api/spring-boot-api-v1.0.0.jar"
-checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-
 [target]
-environment = "prod"
-node_names = ["nodefront01svc"]
-roles = ["api"]
-require_labels = ["region:seoul", "hardware:ssd"]
-require_capabilities = ["systemd", "runtime:java"]
-exclude_labels = ["network:restricted"]
+nodes = []
 
-[layout]
-base_dir = "/srv/jejucd/apps/spring-boot-api"
-releases_dir = "/srv/jejucd/apps/spring-boot-api/releases"
-current_link = "/srv/jejucd/apps/spring-boot-api/current"
-shared_dir = "/srv/jejucd/apps/spring-boot-api/shared"
-log_dir = "/var/log/jejucd/spring-boot-api"
+[target.labels]
+env = "prod"
+region = "kr-seoul"
+"role.api" = "true"
+"runtime.java" = "true"
 
-[runtime]
-type = "java"
-version = "17"
-user = "spring-boot-api"
-
-[service]
-type = "systemd"
-name = "jejucd-spring-boot-api"
-exec = "/usr/bin/java -jar /srv/jejucd/apps/spring-boot-api/current/app.jar"
-working_dir = "/srv/jejucd/apps/spring-boot-api/current"
-env_file = "/etc/jejucd/env/spring-boot-api.env"
-restart = "always"
-
-[service.resources]
-memory_max = "1G"
-cpu_quota = "100%"
-
-[service.hardening]
-no_new_privileges = true
-private_tmp = true
-protect_system = "strict"
-protect_home = true
-
-[http]
-enabled = true
-provider = "nginx"
-mode = "reverse_proxy"
-domains = ["spring.example.com"]
-path = "/"
-listen_port = 80
-
-[http.reverse_proxy]
-upstream_address = "127.0.0.1"
-upstream_port = 8082
-preserve_host = true
-
-[health]
-type = "http"
-url = "http://127.0.0.1:8082/actuator/health"
-expected_status = 200
-timeout_seconds = 5
-interval_seconds = 10
-
-[deployment]
-strategy = "all-at-once"
-rollback = "manual"
-retain_releases = 5
-
-[observability]
-deployment_events = true
-service_name = "spring-boot-api"
-
-[env]
-SERVER_PORT = "8082"
-SPRING_PROFILES_ACTIVE = "prod"
-SPRING_DATASOURCE_URL = "secret://example/spring-boot-api/SPRING_DATASOURCE_URL"
-SPRING_DATASOURCE_USERNAME = "secret://example/spring-boot-api/SPRING_DATASOURCE_USERNAME"
-SPRING_DATASOURCE_PASSWORD = "secret://example/spring-boot-api/SPRING_DATASOURCE_PASSWORD"
+[deploy]
+artifact_dir = "/srv/jejucd/apps/spring-boot-api/current"
+release_dir = "/srv/jejucd/apps/spring-boot-api/releases"
+retain = 5

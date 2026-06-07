@@ -8,12 +8,9 @@ Git은 다음 질문에 답합니다.
 
 ```text
 무엇이 존재해야 하는가
-어떤 앱 버전이 실행되어야 하는가
 어디에서 실행되어야 하는가
-어떤 런타임을 사용해야 하는가
-어떤 systemd 서비스가 존재해야 하는가
-어떤 HTTP provider와 route가 존재해야 하는가
-어떤 헬스 체크가 성공 기준인가
+어떤 built-in deployment kind를 사용할 것인가
+어떤 단순한 release path를 사용할 것인가
 ```
 
 Git은 관측된 런타임 상태를 저장하지 않습니다.
@@ -39,6 +36,9 @@ datacenters/
 
 nodes/
   {node}.toml
+
+kinds/
+  {kind}.toml
 
 apps/
   {domain_key}/
@@ -99,19 +99,16 @@ RBAC:
 
 ```text
 datacenter identity
-node placement label
 node scheduling state
-node capacity policy
+node label
 app identity
-artifact URL/checksum/version
-target selection rule
-runtime intent
-systemd service intent
-HTTP provider와 route intent
-health check intent
-rollback policy
-secret reference
+app kind
+target node name 또는 label selector
+release directory path
+작은 deployment default
 ```
+
+Artifact URL/checksum/version은 CI 또는 manager API가 deployment 요청마다 전달합니다.
 
 저장하면 안 되는 것:
 
@@ -157,20 +154,14 @@ Node 상태에는 다음이 포함됩니다.
 
 ```text
 name
-hostname
-environment
-datacenter
+hostname/address
 scheduling state
-roles
 labels
-legacy_tags values
-port range
-max app count
 ```
 
 Agent version, 감지된 Java version, 설치된 Nginx/systemd/PHP-FPM, 실행 중인 service, 현재 사용 중인 port 같은 live fact는 데이터베이스에 저장합니다.
 
-스케줄링 판단에는 `[placement].labels`를 사용합니다. `[legacy_tags].values`는 migration note, 과거 grouping 이름, 사람이 읽기 위한 context에만 사용하고 target matching에는 사용하지 않습니다.
+스케줄링 판단에는 root `[labels]`를 사용합니다. Label은 아주 작은 Kubernetes selector처럼 정확한 key/value match로 동작합니다.
 
 ## App 상태
 
@@ -181,38 +172,32 @@ App 파일은 하나의 배포 가능한 단위를 설명합니다.
 ```text
 app identity
 kind
-artifact
 target rules
-runtime
-service
-http route
-health check
-deployment strategy
-rollback behavior
-environment values
+release directory paths
 ```
 
 Target rule은 Git이 소유하는 placement intent와 agent가 관측한 node fact를 분리해야 합니다.
 
 ```toml
 [target]
-environment = "prod"
-node_names = ["nodefront01svc"]
-roles = ["api"]
-require_labels = ["region:seoul", "hardware:ssd"]
-require_capabilities = ["systemd", "runtime:java"]
+nodes = []
+
+[target.labels]
+env = "prod"
+region = "kr-seoul"
+"role.api" = "true"
+"runtime.java" = "true"
 ```
 
-`node_names`, `roles`, label은 Git에 저장하는 desired placement state입니다. `node_names`가 있으면 hard allow-list입니다. Manager는 지정된 node에도 environment, role, label, excluded label, capability filter를 계속 적용합니다. `require_capabilities`는 agent가 데이터베이스에 보고한 capability와 매칭합니다.
+`target.nodes`는 정확한 node allow-list입니다. 비어 있으면 manager는 node의 `[labels]` table이 모든 `target.labels` key/value를 만족하는 node를 선택합니다.
 
 지원하는 app kind는 명시적이어야 합니다.
 
 ```text
-spring-boot
+php-fpm
+react-static
 rust-service
-static-site
-php-app
-systemd-service
+spring-boot
 ```
 
 ## Simple RBAC

@@ -1,0 +1,9 @@
+# Built-in deployment kind for PHP-FPM applications.
+
+[kind]
+name = "php-fpm"
+runner = "release-symlink-php-fpm"
+description = "Deploy a PHP source bundle with release directories and PHP-FPM reload."
+
+[defaults]
+retain = 5

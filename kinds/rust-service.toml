@@ -1,0 +1,9 @@
+# Built-in deployment kind for native Rust systemd services.
+
+[kind]
+name = "rust-service"
+runner = "release-symlink-systemd"
+description = "Deploy a native binary release and restart a managed systemd unit."
+
+[defaults]
+retain = 5
